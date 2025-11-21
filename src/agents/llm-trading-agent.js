@@ -13,7 +13,7 @@ export class LLMTradingAgent {
     this.anthropic = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
-    this.model = process.env.CLAUDE_MODEL || 'claude-3-5-sonnet-latest';
+    this.model = process.env.CLAUDE_MODEL || 'claude-3-haiku-20240307';
     this.watchlist = process.env.WATCHLIST?.split(',') || ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA'];
     this.maxPositionSize = parseFloat(process.env.MAX_POSITION_SIZE || '0.2');
     this.minConfidence = parseFloat(process.env.MIN_CONFIDENCE || '0.6');
