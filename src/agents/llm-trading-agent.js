@@ -242,10 +242,13 @@ Trading Rules:
 4. Risk management: Consider overall portfolio diversification
 
 Use the available MCP tools to:
-1. Fetch historical price data
-2. Calculate technical indicators (SMA, RSI, MACD, trend)
-3. Generate trading signals
+1. Fetch historical price data with get_historical_prices (returns 100 data points)
+2. Calculate technical indicators (SMA, RSI, MACD, trend) OR use generate_signals
+3. The generate_signals tool requires the full prices array from get_historical_prices (minimum 50 data points)
 4. Analyze market conditions
+
+IMPORTANT: When using generate_signals, pass the complete prices array from get_historical_prices result.
+Example: After calling get_historical_prices(symbol), pass result.prices to generate_signals(symbol, result.prices)
 
 After your analysis, provide a structured decision in this format:
 {

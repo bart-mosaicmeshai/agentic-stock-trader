@@ -45,7 +45,7 @@ async function main() {
       console.log('🤖 Running LLM trading cycle immediately...\n');
       const today = new Date().toISOString().split('T')[0];
       await agent.executeTradingCycle(today);
-      await portfolio.recordDailySnapshot(today);
+      portfolio.takeDailySnapshot(today);
 
       // Show results
       console.log('\n' + '='.repeat(60));
@@ -59,7 +59,7 @@ async function main() {
       console.log('🤖 Starting LLM Trading Agent with scheduled execution...\n');
       const scheduler = new TradingScheduler(async (date) => {
         await agent.executeTradingCycle(date);
-        await portfolio.recordDailySnapshot(date);
+        portfolio.takeDailySnapshot(date);
       });
       scheduler.start();
       console.log('✓ Scheduler running. Press Ctrl+C to stop.\n');
