@@ -1,10 +1,29 @@
 # Agentic Stock Trader
 
-An AI-powered stock trading system built with Model Context Protocol (MCP) and Claude that autonomously analyzes market data and makes trading decisions with full persistence and backtesting capabilities.
+A **production-grade multi-agent stock trading system** demonstrating the Model Context Protocol (MCP) with three different AI approaches: rule-based algorithms, cloud LLMs (Claude), and local LLMs (LM Studio).
 
-**Two Trading Modes:**
-- **Rule-Based Agent**: Traditional technical analysis with fixed algorithms
-- **LLM Agent** (NEW): Claude-powered AI that uses MCP tools for intelligent decision-making
+## 🚀 Quick Start
+
+```bash
+git clone https://github.com/bart-mosaicmeshai/agentic-stock-trader.git
+cd agentic-stock-trader
+npm install
+cp .env.example .env
+# Add your API keys to .env
+npm run start:llm -- --run-now
+```
+
+**📚 New to the project?** Start with [QUICKSTART.md](./QUICKSTART.md)
+
+## Three Agent Types
+
+| Agent | Model | Speed | Cost | Privacy | Use Case |
+|-------|-------|-------|------|---------|----------|
+| **Rule-Based** | Deterministic | 1-2s | $0 | ✅ Local | Backtesting, research |
+| **Claude Haiku** | claude-3-haiku | 5-10s | ~$0.001/trade | ☁️ Cloud | Live trading, smart decisions |
+| **Local LLM** | LM Studio | 3-10s | $0 | ✅ Private | Unlimited experiments |
+
+**All three agents use the SAME MCP tools!** This demonstrates MCP's portability.
 
 ## Overview
 
@@ -601,10 +620,132 @@ Cache automatically expires after 1 day, so you'll get fresh data daily without 
 - [ ] Add notification system
 - [ ] Web dashboard for monitoring
 
+## 📖 Documentation
+
+- **[QUICKSTART.md](./QUICKSTART.md)** - Get running in 5 minutes
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Deep dive into system design
+- **[LLM-AGENT-GUIDE.md](./LLM-AGENT-GUIDE.md)** - Complete guide to using Claude agent
+- **[CHANGELOG.md](./CHANGELOG.md)** - Version history and updates
+
+## Project Structure
+
+```
+src/
+├── agents/                    # Three trading agents
+│   ├── trading-agent.js       # Rule-based (deterministic)
+│   ├── llm-trading-agent.js   # Claude Haiku (cloud AI)
+│   └── local-llm-agent.js     # LM Studio (local AI)
+│
+├── mcp-servers/               # MCP tool servers
+│   ├── market-data-server.js  # Stock price data
+│   └── analysis-server.js     # Technical indicators
+│
+├── utils/
+│   ├── mcp-client.js          # MCP client wrapper
+│   └── reporter.js            # Performance reporting
+│
+├── core/
+│   ├── portfolio-manager.js   # Portfolio state
+│   ├── scheduler.js           # Daily automation
+│   └── backtest-engine.js     # Historical testing
+│
+├── database/
+│   ├── db.js                  # Database service
+│   └── schema.js              # SQLite schema
+│
+├── index.js                   # Rule-based agent entry
+├── index-llm.js               # Claude agent entry
+├── index-local.js             # Local LLM agent entry
+├── backtest.js                # Backtesting script
+└── report.js                  # Reporting script
+```
+
+## What Makes This Special
+
+### 1. **True MCP Implementation**
+- Real MCP servers with stdio communication
+- Tools work across different AI models
+- Demonstrates MCP's portability
+
+### 2. **Multi-Agent Architecture**
+- Compare rule-based, cloud AI, and local AI
+- Same tools, different intelligence
+- Real-world AI comparison platform
+
+### 3. **Production-Grade Features**
+- SQLite persistence
+- Historical data caching
+- Error handling and logging
+- Automated scheduling
+- Comprehensive reporting
+
+### 4. **Educational Value**
+- See how agentic loops work
+- Understand MCP protocol
+- Compare AI decision-making
+- Learn practical AI engineering
+
+## Key Learnings
+
+**About MCP:**
+- MCP = "USB for AI" - universal tool standard
+- Tools are reusable across any LLM
+- Stdio communication enables process isolation
+- Same tools work with Claude, local LLMs, future models
+
+**About Agentic AI:**
+- Agents don't execute tools directly
+- Loop: Request → Execute locally → Return result → Repeat
+- Tool calling != direct access
+- Reasoning emerges from multi-turn interaction
+
+**About Trading:**
+- AI agents can be conservative (good!)
+- Confidence scoring helps filter trades
+- Reasoning transparency builds trust
+- Backtesting validates strategies
+
+## Performance Notes
+
+From testing all three agents on AAPL (2025-11-21):
+
+**Claude Haiku:**
+- Decision: HOLD
+- Confidence: 60%
+- Reasoning: "Neutral/slightly bearish, sideways trading pattern"
+- Tool calls: 5 (get_prices, SMA, RSI, MACD, trend)
+
+**Local LLM (gpt-oss-20b):**
+- Decision: HOLD
+- Confidence: 55%
+- Reasoning: "Weak sideways trend, RSI 42.6, no clear signals"
+- Tool calls: 4 (get_prices, SMA, RSI, trend)
+
+**Both agents agreed!** Conservative decisions with similar reasoning.
+
 ## Contributing
 
-This project is in active development. Contributions welcome!
+Contributions welcome! Areas for improvement:
+- Additional MCP tools (news sentiment, earnings data)
+- More sophisticated trading strategies
+- Web dashboard for monitoring
+- Additional model support (Ollama, etc.)
+- Performance optimizations
 
 ## License
 
 MIT
+
+## Acknowledgments
+
+Built with:
+- [Anthropic Claude](https://www.anthropic.com/) - Cloud AI
+- [LM Studio](https://lmstudio.ai/) - Local AI
+- [Alpha Vantage](https://www.alphavantage.co/) - Market data
+- [Model Context Protocol](https://modelcontextprotocol.io/) - Tool standard
+
+---
+
+**⭐ Star this repo if you found it useful!**
+
+This project demonstrates production-grade agentic AI with MCP. Perfect for learning, research, and building your own AI agents.
