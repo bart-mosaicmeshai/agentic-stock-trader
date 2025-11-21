@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import { createTables } from './schema.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,7 +17,6 @@ class DatabaseService {
   initialize() {
     // Ensure data directory exists
     const dbDir = path.dirname(this.dbPath);
-    const fs = await import('fs');
     if (!fs.existsSync(dbDir)) {
       fs.mkdirSync(dbDir, { recursive: true });
     }
