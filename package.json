@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
+    "start:llm": "node src/index-llm.js",
     "dev": "node --watch src/index.js",
     "backtest": "node src/backtest.js",
     "report": "node src/report.js",
@@ -20,10 +21,10 @@
   "author": "bart-mosaicmeshai",
   "license": "MIT",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.1",
     "@modelcontextprotocol/sdk": "^1.0.0",
     "better-sqlite3": "^11.8.1",
     "dotenv": "^16.4.5",
     "node-cron": "^3.0.3"
-  },
-  "devDependencies": {}
+  }
 }

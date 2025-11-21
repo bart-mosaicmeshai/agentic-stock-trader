@@ -1,6 +1,10 @@
 # Agentic Stock Trader
 
-An AI-powered stock trading system built with Model Context Protocol (MCP) that autonomously analyzes market data and makes trading decisions with full persistence and backtesting capabilities.
+An AI-powered stock trading system built with Model Context Protocol (MCP) and Claude that autonomously analyzes market data and makes trading decisions with full persistence and backtesting capabilities.
+
+**Two Trading Modes:**
+- **Rule-Based Agent**: Traditional technical analysis with fixed algorithms
+- **LLM Agent** (NEW): Claude-powered AI that uses MCP tools for intelligent decision-making
 
 ## Overview
 
@@ -81,7 +85,19 @@ Get a free API key from Alpha Vantage:
 
 **Free Tier Limits**: 25 requests per day, 5 requests per minute
 
-### 3. Configure Environment
+### 3. Get Anthropic API Key (for LLM Agent)
+
+Get an API key from Anthropic:
+
+1. Visit https://console.anthropic.com/
+2. Sign up or log in
+3. Navigate to API Keys
+4. Create a new API key
+5. Copy the key (starts with `sk-ant-`)
+
+**Note**: Only required if using the LLM-powered agent. The rule-based agent works without this.
+
+### 4. Configure Environment
 
 Copy `.env.example` to `.env` and configure your settings:
 
@@ -89,11 +105,12 @@ Copy `.env.example` to `.env` and configure your settings:
 cp .env.example .env
 ```
 
-Edit `.env` and add your API key:
+Edit `.env` and add your API keys:
 
 ```env
 # API Keys
 ALPHA_VANTAGE_API_KEY=your_actual_api_key_here
+ANTHROPIC_API_KEY=sk-ant-your_key_here  # Required for LLM agent
 FINNHUB_API_KEY=your_api_key_here  # Optional
 
 # Trading Configuration
@@ -109,37 +126,68 @@ MIN_CONFIDENCE=0.6  # Min 60% confidence to execute trades
 MCP_SERVER_PORT=3000
 ```
 
-### 4. Initialize Database
+### 5. Initialize Database
 
 The database will be automatically created on first run in `data/trading.db`
 
 ## Usage
 
-### View Portfolio Status
+### Choose Your Trading Agent
+
+#### **Rule-Based Agent** (Traditional)
+
+Uses fixed technical analysis algorithms (SMA, RSI, MACD) with predetermined thresholds.
 
 ```bash
+# View portfolio status
 npm start
-```
 
-Shows current portfolio, positions, and performance summary.
-
-### Run Trading Immediately
-
-```bash
+# Run trading immediately
 npm start -- --run-now
-```
 
-Executes trading logic immediately and records a daily snapshot.
-
-### Start Daily Scheduler
-
-```bash
+# Start daily scheduler (10am ET)
 npm start -- --schedule
 ```
 
-Starts the cron scheduler to run trading daily at 10am ET (Monday-Friday). The process will keep running until stopped with Ctrl+C.
+#### **LLM Agent** (AI-Powered) ⭐ NEW
 
-**For 30-day evaluation**: Run this command and let it execute daily. After 30 days, use the reporting tools to analyze performance.
+Uses Claude to make intelligent decisions by analyzing market data through MCP tools.
+
+```bash
+# View portfolio status
+npm run start:llm
+
+# Run trading immediately (Claude analyzes and trades)
+npm run start:llm -- --run-now
+
+# Start daily scheduler (10am ET)
+npm run start:llm -- --schedule
+```
+
+**How the LLM Agent Works:**
+
+1. Claude receives portfolio context and watchlist
+2. Uses MCP tools to fetch market data (`get_historical_prices`)
+3. Uses MCP tools to calculate indicators (`calculate_rsi`, `generate_signals`)
+4. Analyzes current positions for sell opportunities
+5. Makes reasoning-based decisions with confidence scores
+6. Executes trades through the portfolio manager
+
+**Example LLM Decision:**
+```json
+{
+  "action": "BUY",
+  "symbol": "AAPL",
+  "quantity": 50,
+  "confidence": 0.78,
+  "reasoning": "Strong uptrend confirmed by SMA20 > SMA50, RSI at 45 (not overbought), recent momentum +5.2%. Technical indicators align for a buy opportunity.",
+  "indicators_used": ["SMA", "RSI", "MACD", "trend_analysis"]
+}
+```
+
+### Portfolio Status
+
+Shows current holdings, cash, returns, and position details.
 
 ### Generate Reports
 
@@ -187,6 +235,25 @@ Backtest data is stored in `data/backtest.db` separately from live paper trading
 - Cache expires after 1 day to ensure fresh data
 - Cache stored in `cache/historical/` directory
 - Allows unlimited backtesting without hitting API limits
+
+## Agent Comparison: Rule-Based vs LLM
+
+| Feature | Rule-Based Agent | LLM Agent (Claude) |
+|---------|------------------|-------------------|
+| **Decision Making** | Fixed algorithms | Adaptive reasoning |
+| **Technical Analysis** | Pre-calculated signals | Dynamic tool usage |
+| **Confidence Scoring** | Formula-based (0.25 + 0.3 + ...) | Context-aware judgment |
+| **Reasoning** | Static templates | Natural language explanations |
+| **Market Conditions** | Ignores broader context | Can consider nuance |
+| **API Costs** | Alpha Vantage only | Alpha Vantage + Anthropic |
+| **Execution Speed** | ~1-2 seconds | ~5-10 seconds |
+| **Transparency** | Fully deterministic | Explainable (with reasoning) |
+| **Adaptability** | Requires code changes | Can adjust to new patterns |
+| **Best For** | Backtesting, research | Live trading, complex markets |
+
+**Cost Comparison:**
+- **Rule-Based**: Free (just Alpha Vantage API)
+- **LLM**: ~$0.015 per trading cycle (input: 2K tokens @ $3/M, output: 500 tokens @ $15/M)
 
 ## Database Schema
 
@@ -453,11 +520,16 @@ npm start -- --schedule
 
 ### 30-Day Evaluation Plan
 
-**Setup**:
+#### Using Rule-Based Agent:
 ```bash
 # Start automated trading
 npm start -- --schedule
-# Leave this running or set up as a cron job
+```
+
+#### Using LLM Agent:
+```bash
+# Start LLM-powered trading
+npm run start:llm -- --schedule
 ```
 
 **Monitor Progress** (weekly):
@@ -470,6 +542,13 @@ npm run report -- --trades 20
 ```bash
 npm run report
 npm run report -- --export 30day-evaluation.csv
+```
+
+**Comparing Both Agents:**
+Run both agents side-by-side using separate databases to compare performance:
+```bash
+# Use two terminal windows, each with different database path
+# Or run them on different schedules
 ```
 
 ### Optimization Tips
