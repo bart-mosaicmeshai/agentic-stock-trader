@@ -13,6 +13,7 @@ export class LLMTradingAgent {
     this.anthropic = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
+    this.model = process.env.CLAUDE_MODEL || 'claude-3-5-sonnet-latest';
     this.watchlist = process.env.WATCHLIST?.split(',') || ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA'];
     this.maxPositionSize = parseFloat(process.env.MAX_POSITION_SIZE || '0.2');
     this.minConfidence = parseFloat(process.env.MIN_CONFIDENCE || '0.6');
@@ -273,7 +274,7 @@ If no good opportunities exist, respond with action: "HOLD" and explain why.`;
 
       while (continueLoop) {
         const response = await this.anthropic.messages.create({
-          model: 'claude-3-5-sonnet-20240620',
+          model: this.model,
           max_tokens: 4096,
           system: systemPrompt,
           tools: this.getMCPTools(),
