@@ -5,13 +5,11 @@
  * Uses Claude to make AI-driven trading decisions with MCP tools
  */
 
-import dotenv from 'dotenv';
-import { DatabaseService } from './database/db.js';
+import 'dotenv/config';
+import DatabaseService from './database/db.js';
 import { PortfolioManager } from './core/portfolio-manager.js';
 import { LLMTradingAgent } from './agents/llm-trading-agent.js';
-import { Scheduler } from './core/scheduler.js';
-
-dotenv.config();
+import { TradingScheduler } from './core/scheduler.js';
 
 // Check for required API key
 if (!process.env.ANTHROPIC_API_KEY) {
@@ -34,6 +32,8 @@ async function main() {
 
   // Initialize components
   const db = new DatabaseService();
+  db.initialize();
+
   const portfolio = new PortfolioManager(db);
   const agent = new LLMTradingAgent(db, portfolio);
 
@@ -57,7 +57,7 @@ async function main() {
 
     } else if (shouldSchedule) {
       console.log('🤖 Starting LLM Trading Agent with scheduled execution...\n');
-      const scheduler = new Scheduler(async (date) => {
+      const scheduler = new TradingScheduler(async (date) => {
         await agent.executeTradingCycle(date);
         await portfolio.recordDailySnapshot(date);
       });
