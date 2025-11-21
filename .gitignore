@@ -34,6 +34,7 @@ trades/
 portfolio/
 logs/
 data/
+cache/
 
 # CSV exports
 *.csv

@@ -88,6 +88,7 @@ export class BacktestEngine {
     const signals = await this.tradingStrategy.generateSignals(date, state);
 
     if (!signals || signals.length === 0) {
+      // Uncomment for debugging: console.log(`${date}: No signals`);
       return;
     }
 

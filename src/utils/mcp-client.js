@@ -5,12 +5,7 @@
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { spawn } from 'child_process';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export class MCPClient {
   constructor(serverPath) {
@@ -20,22 +15,16 @@ export class MCPClient {
       : path.resolve(process.cwd(), serverPath);
     this.client = null;
     this.transport = null;
-    this.process = null;
   }
 
   /**
    * Connect to the MCP server
    */
   async connect() {
-    // Spawn the server process
-    this.process = spawn('node', [this.serverPath], {
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-
-    // Create transport
+    // Create transport with command and args
     this.transport = new StdioClientTransport({
-      reader: this.process.stdout,
-      writer: this.process.stdin,
+      command: 'node',
+      args: [this.serverPath],
     });
 
     // Create and connect client
@@ -89,8 +78,8 @@ export class MCPClient {
     if (this.client) {
       await this.client.close();
     }
-    if (this.process) {
-      this.process.kill();
+    if (this.transport) {
+      await this.transport.close();
     }
   }
 }

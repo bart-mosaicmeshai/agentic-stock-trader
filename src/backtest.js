@@ -3,6 +3,7 @@ import 'dotenv/config';
 import DatabaseService from './database/db.js';
 import { BacktestEngine, TradingStrategy } from './core/backtest-engine.js';
 import { MarketDataClient, AnalysisClient } from './utils/mcp-client.js';
+import { HistoricalDataCache } from './utils/cache.js';
 
 /**
  * MCP-based trading strategy for backtesting
@@ -14,6 +15,7 @@ class MCPBacktestStrategy extends TradingStrategy {
     super();
     this.marketDataClient = null;
     this.analysisClient = null;
+    this.cache = new HistoricalDataCache();
     this.watchlist = process.env.WATCHLIST?.split(',') || ['AAPL', 'GOOGL', 'MSFT'];
     this.maxPositionSize = parseFloat(process.env.MAX_POSITION_SIZE || '0.2');
     this.minConfidence = parseFloat(process.env.MIN_CONFIDENCE || '0.6');
@@ -29,22 +31,40 @@ class MCPBacktestStrategy extends TradingStrategy {
     await this.analysisClient.connect();
 
     // Fetch and cache historical data for all symbols
-    console.log('Fetching historical data...');
+    console.log('Fetching historical data (using cache when available)...');
     for (const symbol of this.watchlist) {
       try {
-        const data = await this.marketDataClient.getHistoricalPrices(symbol, 'full');
+        // Try to get from cache first
+        let data = this.cache.get(symbol, 'full');
+
+        if (!data) {
+          // Cache miss - fetch from API
+          console.log(`  🌐 Fetching ${symbol} from API...`);
+          data = await this.marketDataClient.getHistoricalPrices(symbol, 'full');
+
+          // Save to cache
+          this.cache.set(symbol, data, 'full');
+        }
+
         this.historicalData[symbol] = data.prices;
-        console.log(`  ✓ ${symbol}: ${data.prices.length} data points`);
+        const dateRange = data.prices.length > 0
+          ? `${data.prices[data.prices.length - 1].date} to ${data.prices[0].date}`
+          : 'no dates';
+        console.log(`  ✓ ${symbol}: ${data.prices.length} data points (${dateRange})`);
       } catch (error) {
         console.error(`  ✗ ${symbol}: ${error.message}`);
       }
     }
 
+    // Show cache stats
+    const stats = this.cache.getStats();
+    console.log(`\n📦 Cache: ${stats.files} files, ${stats.totalSizeMB} MB`);
     console.log('✓ Initialization complete\n');
   }
 
   async generateSignals(date, state) {
     const signals = [];
+    const debugSignals = []; // Track all signals for debugging
 
     // Analyze each symbol in watchlist for buy opportunities
     for (const symbol of this.watchlist) {
@@ -56,6 +76,7 @@ class MCPBacktestStrategy extends TradingStrategy {
       const signal = await this.analyzeBuyOpportunity(symbol, date, state);
       if (signal) {
         signals.push(signal);
+        debugSignals.push({ symbol, ...signal });
       }
     }
 
@@ -64,7 +85,13 @@ class MCPBacktestStrategy extends TradingStrategy {
       const sellSignal = await this.evaluateSellOpportunity(symbol, date, state, position);
       if (sellSignal) {
         signals.push(sellSignal);
+        debugSignals.push({ symbol, ...sellSignal });
       }
+    }
+
+    // Debug: Show first few days of signals
+    if (debugSignals.length > 0 && Math.random() < 0.05) {  // 5% sample
+      console.log(`[DEBUG ${date}] Signals:`, debugSignals.map(s => `${s.symbol}:${s.action}(${s.confidence || 'N/A'})`).join(', '));
     }
 
     return signals;
@@ -77,15 +104,21 @@ class MCPBacktestStrategy extends TradingStrategy {
       return null;
     }
 
-    // Get price for this date
+    // Get price for this date (or closest previous trading day)
     const currentPrice = this.getPriceForDate(symbol, date);
     if (!currentPrice) {
+      // No data for this date (weekend/holiday) - skip
       return null;
     }
 
     // Generate signals using analysis
     try {
       const analysis = await this.analysisClient.generateSignals(symbol, historicalPrices);
+
+      // Debug: Log occasionally to see what's happening
+      if (Math.random() < 0.01) {  // 1% sample
+        console.log(`[DEBUG] ${symbol} on ${date}: ${analysis.signal} (conf: ${(analysis.confidence * 100).toFixed(1)}%, need: ${(this.minConfidence * 100).toFixed(0)}%)`);
+      }
 
       if (analysis.signal === 'BUY' && analysis.confidence >= this.minConfidence) {
         // Calculate position size
@@ -191,7 +224,15 @@ class MCPBacktestStrategy extends TradingStrategy {
     const prices = this.historicalData[symbol];
     if (!prices) return null;
 
-    const dayPrice = prices.find(p => p.date === date);
+    // Try exact match first
+    let dayPrice = prices.find(p => p.date === date);
+
+    // If no exact match (weekend/holiday), find most recent previous trading day
+    if (!dayPrice) {
+      const sortedPrices = prices.filter(p => p.date <= date).sort((a, b) => b.date.localeCompare(a.date));
+      dayPrice = sortedPrices[0];
+    }
+
     return dayPrice ? dayPrice.close : null;
   }
 
