@@ -192,6 +192,11 @@ export class LLMTradingAgent {
     const client = isMarketDataTool ? this.marketDataClient : this.analysisClient;
 
     try {
+      // Debug logging for generate_signals
+      if (toolName === 'generate_signals') {
+        console.log(`  📊 generate_signals input - symbol: ${toolInput.symbol}, prices array length: ${toolInput.prices?.length || 0}`);
+      }
+
       const result = await client.callTool(toolName, toolInput);
       return result;
     } catch (error) {

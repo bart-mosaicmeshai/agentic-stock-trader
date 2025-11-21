@@ -52,7 +52,9 @@ async function main() {
       const summary = portfolio.getPortfolioSummary();
       console.log(`Portfolio Value: $${summary.totalValue.toFixed(2)}`);
       console.log(`Cash: $${summary.cash.toFixed(2)}`);
-      console.log(`Total Return: ${summary.totalReturn.toFixed(2)}%`);
+      if (summary.totalReturn !== null && summary.totalReturn !== undefined) {
+        console.log(`Total Return: ${summary.totalReturn.toFixed(2)}%`);
+      }
       console.log('='.repeat(60) + '\n');
 
     } else if (shouldSchedule) {
