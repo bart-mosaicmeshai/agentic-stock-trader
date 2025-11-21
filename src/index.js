@@ -4,6 +4,7 @@ import DatabaseService from './database/db.js';
 import { PortfolioManager } from './core/portfolio-manager.js';
 import { TradingScheduler, getCurrentETTime, areMarketsOpen } from './core/scheduler.js';
 import { Reporter } from './utils/reporter.js';
+import { TradingAgent } from './agents/trading-agent.js';
 
 console.log('🤖 Agentic Stock Trader');
 console.log('Trading Mode:', process.env.TRADING_MODE || 'paper');
@@ -13,13 +14,18 @@ console.log('Markets Open:', areMarketsOpen() ? 'Yes' : 'No');
 console.log('');
 
 /**
- * Simple trading engine placeholder
- * Replace this with your actual MCP-based trading logic
+ * MCP-based Trading Engine
+ * Uses AI agent with MCP servers for market data and analysis
  */
-class SimpleTradingEngine {
+class MCPTradingEngine {
   constructor(db, portfolioManager) {
     this.db = db;
     this.portfolio = portfolioManager;
+    this.agent = new TradingAgent(db, portfolioManager);
+  }
+
+  async initialize() {
+    await this.agent.initialize();
   }
 
   async runDailyTrading() {
@@ -28,12 +34,11 @@ class SimpleTradingEngine {
     console.log(`\n📊 Running trading for ${today}...`);
 
     try {
-      // TODO: Implement your MCP-based trading logic here
-      // 1. Fetch market data via MCP server
-      // 2. Analyze data and generate signals
-      // 3. Execute trades based on signals
+      // Execute trading cycle using AI agent
+      await this.agent.executeTradingCycle(today);
 
-      console.log('Trading logic placeholder - implement MCP integration');
+      // Update prices for all positions
+      await this.agent.updatePositionPrices();
 
       // Take daily snapshot
       this.portfolio.takeDailySnapshot(today);
@@ -41,13 +46,19 @@ class SimpleTradingEngine {
       console.log('✓ Daily trading completed');
     } catch (error) {
       console.error('Error during trading:', error);
+      throw error;
     }
+  }
+
+  async cleanup() {
+    await this.agent.cleanup();
   }
 }
 
 // Main application entry point
 async function main() {
   let db = null;
+  let tradingEngine = null;
 
   try {
     // Initialize database
@@ -58,7 +69,7 @@ async function main() {
     const portfolioManager = new PortfolioManager(db);
 
     // Initialize trading engine
-    const tradingEngine = new SimpleTradingEngine(db, portfolioManager);
+    tradingEngine = new MCPTradingEngine(db, portfolioManager);
 
     // Initialize reporter
     const reporter = new Reporter(db);
@@ -72,13 +83,20 @@ async function main() {
 
     if (args.includes('--run-now')) {
       // Run trading immediately
+      await tradingEngine.initialize();
       await tradingEngine.runDailyTrading();
+      await tradingEngine.cleanup();
       reporter.displayPortfolio();
+      if (db) db.close();
     } else if (args.includes('--report')) {
       // Just show report
       reporter.displayRecentTrades();
       reporter.displayPerformance();
+      if (db) db.close();
     } else if (args.includes('--schedule')) {
+      // Initialize MCP clients for scheduled trading
+      await tradingEngine.initialize();
+
       // Start scheduled trading
       const scheduler = new TradingScheduler(tradingEngine);
       scheduler.start();
@@ -89,9 +107,10 @@ async function main() {
       process.stdin.resume();
 
       // Handle graceful shutdown
-      process.on('SIGINT', () => {
+      process.on('SIGINT', async () => {
         console.log('\n\nShutting down...');
         scheduler.stop();
+        await tradingEngine.cleanup();
         if (db) db.close();
         process.exit(0);
       });
@@ -108,6 +127,9 @@ async function main() {
     }
   } catch (error) {
     console.error('Error starting application:', error);
+    if (tradingEngine) {
+      await tradingEngine.cleanup();
+    }
     if (db) db.close();
     process.exit(1);
   }

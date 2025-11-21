@@ -183,24 +183,60 @@ All data persists between runs, allowing long-term evaluation.
 
 ## Trading Strategy Implementation
 
-The current implementation includes placeholders for MCP-based trading logic. To implement your strategy:
+The system is now fully implemented with MCP-based trading logic:
 
-1. **Create MCP Servers** in `src/mcp-servers/`:
-   - Market data server for fetching prices
-   - Analysis server for technical indicators
+### **Implemented MCP Servers**
 
-2. **Implement Trading Agent** in `src/agents/`:
-   - Connect to MCP servers
-   - Analyze market data
-   - Generate trading signals
+1. **Market Data Server** (`src/mcp-servers/market-data-server.js`):
+   - Fetches real-time and historical stock prices via Alpha Vantage API
+   - Tools: `get_current_price`, `get_historical_prices`, `get_intraday_prices`, `search_symbols`
+   - Includes response caching to respect API rate limits
 
-3. **Update Trading Engine** in `src/index.js`:
-   - Replace `SimpleTradingEngine` with your MCP-based logic
-   - Use `portfolioManager.executeBuy()` and `executeSell()` for trades
+2. **Analysis Server** (`src/mcp-servers/analysis-server.js`):
+   - Technical analysis indicators: SMA, EMA, RSI, MACD, Bollinger Bands
+   - Trend detection and signal generation
+   - Tools: `calculate_sma`, `calculate_rsi`, `calculate_macd`, `detect_trend`, `generate_signals`
 
-4. **Update Backtest Strategy** in `src/backtest.js`:
-   - Implement `ExampleStrategy.generateSignals()`
-   - Return signals in format: `{symbol, action, quantity, price, reasoning}`
+### **AI Trading Agent**
+
+The `TradingAgent` (`src/agents/trading-agent.js`) implements intelligent trading decisions:
+
+- **Buy Logic**: Analyzes watchlist symbols using technical indicators, confidence scoring
+- **Sell Logic**: Stop loss (-10%), take profit (+15%), technical sell signals
+- **Position Sizing**: Configurable max position size (default 20% of portfolio)
+- **Risk Management**: Minimum confidence threshold (default 60%)
+
+### **Configuration**
+
+Customize trading behavior in `.env`:
+
+```env
+WATCHLIST=AAPL,GOOGL,MSFT,AMZN,TSLA  # Symbols to trade
+MAX_POSITION_SIZE=0.2                 # Max 20% per position
+MIN_CONFIDENCE=0.6                    # Min 60% confidence to trade
+```
+
+### **How It Works**
+
+1. **Daily Trading Cycle**:
+   - Agent analyzes each symbol in watchlist
+   - Fetches historical prices via Market Data Server
+   - Generates buy/sell signals via Analysis Server
+   - Executes trades based on confidence levels
+   - Records all decisions in database
+
+2. **Technical Analysis**:
+   - SMA 20/50 for trend identification
+   - EMA 12 for momentum
+   - RSI 14 for overbought/oversold conditions
+   - Recent price momentum analysis
+   - Multi-factor confidence scoring
+
+3. **Risk Management**:
+   - Automatic stop loss at -10%
+   - Take profit at +15%
+   - Position sizing based on portfolio value
+   - Confidence-based trade filtering
 
 ## Example: 30-Day Paper Trading Evaluation
 

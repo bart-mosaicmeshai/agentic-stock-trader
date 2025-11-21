@@ -33,3 +33,7 @@ mcp-data/
 trades/
 portfolio/
 logs/
+data/
+
+# CSV exports
+*.csv
