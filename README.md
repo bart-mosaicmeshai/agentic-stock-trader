@@ -166,20 +166,27 @@ npm run report -- --export results.csv
 ### Run Backtests
 
 ```bash
-# Backtest with defaults (2024-01-01 to 2024-12-31)
-npm run backtest
+# Backtest with recent dates (use current year data)
+npm run backtest 2025-08-01 2025-11-15
 
 # Backtest specific date range
-npm run backtest 2024-06-01 2024-12-31
+npm run backtest 2025-06-01 2025-09-30
 
 # Backtest with custom initial capital
-npm run backtest 2024-01-01 2024-12-31 50000
+npm run backtest 2025-08-01 2025-11-15 50000
 
 # Show help
 npm run backtest -- --help
 ```
 
 Backtest data is stored in `data/backtest.db` separately from live paper trading data.
+
+**Historical Data Caching:**
+- First backtest run fetches data from API and caches locally
+- Subsequent runs use cached data (zero API calls!)
+- Cache expires after 1 day to ensure fresh data
+- Cache stored in `cache/historical/` directory
+- Allows unlimited backtesting without hitting API limits
 
 ## Database Schema
 
@@ -348,7 +355,145 @@ The system calculates:
 
 - **Paper Trading Database**: `data/trading.db`
 - **Backtest Database**: `data/backtest.db`
+- **Historical Data Cache**: `cache/historical/` (JSON files)
 - **CSV Exports**: Current directory (customizable)
+
+## Troubleshooting
+
+### API Rate Limit Reached
+
+**Error**: `API rate limit reached. Please try again later or use a premium API key.`
+
+**Cause**: Alpha Vantage free tier allows 25 requests per day. Each backtest initialization uses 5 API calls (one per stock in watchlist).
+
+**Solutions**:
+1. **Wait for reset**: API limits reset at midnight UTC
+2. **Use cached data**: After first successful run, subsequent backtests use cache (zero API calls)
+3. **Reduce watchlist**: Temporarily use fewer stocks in `.env`
+4. **Upgrade API**: Premium tier ($49.99/mo) provides 75+ requests/day
+
+**Cache Benefits**:
+```bash
+# First run: Uses 5 API calls, caches data
+npm run backtest 2025-08-01 2025-11-15
+
+# Second run: Uses 0 API calls (from cache!)
+npm run backtest 2025-08-01 2025-11-15
+
+# Different date range: Still uses cache
+npm run backtest 2025-09-01 2025-11-15
+```
+
+### No Trades Executed
+
+**Observation**: Backtest or live trading shows 0 trades.
+
+**This is normal!** The system is conservative and only trades when:
+- Technical signals align (SMA, EMA, RSI, momentum)
+- Confidence > 60% (or your `MIN_CONFIDENCE` setting)
+- Sufficient cash available
+- Risk management rules satisfied
+
+**To see more trades**:
+1. Lower confidence threshold in `.env`: `MIN_CONFIDENCE=0.5`
+2. Try different time periods (some periods have clearer signals)
+3. Adjust position sizing: `MAX_POSITION_SIZE=0.25`
+
+### Markets Closed / Wrong Date
+
+The system shows "Markets Open: No" because it checks current ET time. This is normal outside of 9:30 AM - 4:00 PM ET, Monday-Friday.
+
+For backtesting, use dates within your cached data range (check output for date range).
+
+## Next Steps & Best Practices
+
+### Initial Setup Complete ✅
+
+You've successfully:
+- Installed and configured the system
+- Set up Alpha Vantage API key
+- Run your first trading cycle
+- Implemented historical data caching
+
+### Recommended Workflow
+
+**Day 1: Populate Cache**
+```bash
+# Run one backtest to cache historical data
+npm run backtest 2025-08-01 2025-11-15
+
+# This uses 5 API calls and caches the data
+```
+
+**Day 1+: Experiment Freely**
+```bash
+# Try different confidence thresholds
+# Edit .env: MIN_CONFIDENCE=0.5
+npm run backtest 2025-08-01 2025-11-15
+
+# Try different date ranges (uses same cache)
+npm run backtest 2025-09-01 2025-11-15
+
+# Try different position sizing
+# Edit .env: MAX_POSITION_SIZE=0.15
+npm run backtest 2025-08-01 2025-11-15
+
+# View all backtest results
+npm run report -- --backtest
+```
+
+**Daily: Live Trading**
+```bash
+# Manual run (1-2 API calls per watchlist stock)
+npm start -- --run-now
+
+# Or automated (once per day at 10am ET)
+npm start -- --schedule
+```
+
+### 30-Day Evaluation Plan
+
+**Setup**:
+```bash
+# Start automated trading
+npm start -- --schedule
+# Leave this running or set up as a cron job
+```
+
+**Monitor Progress** (weekly):
+```bash
+npm run report -- --stats
+npm run report -- --trades 20
+```
+
+**After 30 Days**:
+```bash
+npm run report
+npm run report -- --export 30day-evaluation.csv
+```
+
+### Optimization Tips
+
+1. **Test Strategies**: Use backtesting to validate before live trading
+2. **Start Conservative**: Default 60% confidence is good for learning
+3. **Monitor API Usage**: Check how many calls you use per day
+4. **Review Trades**: Look at reasoning in reports to understand decisions
+5. **Adjust Gradually**: Change one parameter at a time
+
+### Cache Management
+
+```bash
+# Clear cache to force fresh data fetch
+rm -rf cache/
+
+# Clear specific symbol
+rm cache/historical/AAPL_full.json
+
+# Check cache size
+du -sh cache/
+```
+
+Cache automatically expires after 1 day, so you'll get fresh data daily without manual clearing.
 
 ## Development
 
