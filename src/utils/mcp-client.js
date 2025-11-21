@@ -6,10 +6,18 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { spawn } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export class MCPClient {
   constructor(serverPath) {
-    this.serverPath = serverPath;
+    // Resolve relative path to absolute path
+    this.serverPath = path.isAbsolute(serverPath)
+      ? serverPath
+      : path.resolve(process.cwd(), serverPath);
     this.client = null;
     this.transport = null;
     this.process = null;
