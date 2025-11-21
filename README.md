@@ -230,6 +230,58 @@ MAX_POSITION_SIZE=0.2                 # Max 20% per position
 MIN_CONFIDENCE=0.6                    # Min 60% confidence to trade
 ```
 
+#### **Watchlist Configuration**
+
+The watchlist determines which stocks the system analyzes and trades. You can configure any stocks you want:
+
+**Examples:**
+
+```env
+# Conservative - Large Cap Tech (3 stocks)
+WATCHLIST=AAPL,MSFT,GOOGL
+MAX_POSITION_SIZE=0.33  # Can invest up to 99% if all trigger
+
+# Diversified - Multiple Sectors (10 stocks)
+WATCHLIST=AAPL,JPM,XOM,JNJ,WMT,DIS,BA,CAT,NVDA,AMD
+MAX_POSITION_SIZE=0.15  # Spread across 10 stocks
+
+# Aggressive - High Growth Tech
+WATCHLIST=TSLA,NVDA,AMD,PLTR,SNOW,NET,CRWD,ZS
+MAX_POSITION_SIZE=0.20
+
+# Index Tracking - ETFs
+WATCHLIST=SPY,QQQ
+MAX_POSITION_SIZE=0.5   # 50% each
+
+# Sector Focus - Energy
+WATCHLIST=XOM,CVX,COP,SLB,EOG
+MAX_POSITION_SIZE=0.25
+
+# Sector Focus - Healthcare
+WATCHLIST=JNJ,PFE,MRK,ABBV,LLY
+MAX_POSITION_SIZE=0.25
+```
+
+**Sizing Guidelines:**
+
+| Watchlist Size | API Calls/Day | Max Position Size | Strategy Type |
+|----------------|---------------|-------------------|---------------|
+| 2-3 stocks | ~6 calls | 30-50% | Concentrated |
+| 5 stocks (default) | ~12 calls | 20% | Balanced |
+| 8 stocks | ~20 calls | 12-15% | Diversified |
+| 10+ stocks | 25+ calls | 10% | Highly Diversified |
+
+**API Considerations:**
+- **Free Alpha Vantage**: 25 requests/day → Recommended max 8 stocks
+- **Premium Alpha Vantage** ($49.99/mo): 75+ requests/day → 20+ stocks possible
+- Each stock analyzed requires 1-2 API calls per trading session
+
+**Capital Allocation:**
+- System uses position sizing, NOT all-in strategy
+- Keeps cash available for opportunities (typically 40-80% stays in cash)
+- Example: 5 stocks at 20% each = max 100% invested (if all trigger buy signals)
+- Realistic: Usually only 1-3 positions trigger per day = 20-60% invested
+
 ### **How It Works**
 
 1. **Daily Trading Cycle**:
