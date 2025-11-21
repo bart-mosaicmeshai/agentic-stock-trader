@@ -71,7 +71,17 @@ The system uses the Model Context Protocol (MCP) to modularize trading component
 npm install
 ```
 
-### 2. Configure Environment
+### 2. Get Alpha Vantage API Key
+
+Get a free API key from Alpha Vantage:
+
+1. Visit https://www.alphavantage.co/support/#api-key
+2. Enter your email and click "GET FREE API KEY"
+3. Copy your API key (starts with a letter, contains letters and numbers)
+
+**Free Tier Limits**: 25 requests per day, 5 requests per minute
+
+### 3. Configure Environment
 
 Copy `.env.example` to `.env` and configure your settings:
 
@@ -79,23 +89,27 @@ Copy `.env.example` to `.env` and configure your settings:
 cp .env.example .env
 ```
 
-Edit `.env`:
+Edit `.env` and add your API key:
 
 ```env
-# API Keys (add your keys)
-ALPHA_VANTAGE_API_KEY=your_api_key_here
-FINNHUB_API_KEY=your_api_key_here
+# API Keys
+ALPHA_VANTAGE_API_KEY=your_actual_api_key_here
+FINNHUB_API_KEY=your_api_key_here  # Optional
 
 # Trading Configuration
 TRADING_MODE=paper
-INITIAL_CAPITAL=100000
-RISK_TOLERANCE=moderate
+INITIAL_CAPITAL=100000  # Starting capital for paper trading
+
+# Trading Strategy
+WATCHLIST=AAPL,GOOGL,MSFT,AMZN,TSLA  # Stocks to trade
+MAX_POSITION_SIZE=0.2  # Max 20% of portfolio per position
+MIN_CONFIDENCE=0.6  # Min 60% confidence to execute trades
 
 # MCP Configuration
 MCP_SERVER_PORT=3000
 ```
 
-### 3. Initialize Database
+### 4. Initialize Database
 
 The database will be automatically created on first run in `data/trading.db`
 
