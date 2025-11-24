@@ -10,6 +10,7 @@
     "start:local": "node src/index-local.js",
     "dev": "node --watch src/index.js",
     "backtest": "node src/backtest.js",
+    "backtest:local": "node src/backtest-local.js",
     "report": "node src/report.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
