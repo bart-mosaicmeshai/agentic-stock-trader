@@ -269,28 +269,31 @@ npm run report -- --export results.csv
 #### Rule-Based Backtest (Fast)
 
 ```bash
-# Backtest with recent dates (use current year data)
-npm run backtest 2025-08-01 2025-11-15
+# Backtest recent 3 months (recommended)
+npm run backtest 2025-08-01 2025-11-24
 
-# Backtest specific date range
-npm run backtest 2025-06-01 2025-09-30
+# Backtest with custom date range (max ~3-4 months)
+npm run backtest 2025-09-01 2025-11-24
 
 # Backtest with custom initial capital
-npm run backtest 2025-08-01 2025-11-15 50000
+npm run backtest 2025-08-01 2025-11-24 50000
 
 # Show help
 npm run backtest -- --help
 ```
 
-Backtest data is stored in `data/backtest.db` separately from live paper trading data.
+**Limitations:**
+- ⚠️ Free Alpha Vantage tier provides last **~100 days** of data (3-4 months)
+- For longer backtests, upgrade to [Alpha Vantage Premium](https://www.alphavantage.co/premium/) ($49.99/month)
+- Backtest data is stored in `data/backtest.db` separately from live trading data
 
 #### Local LLM Backtest (Slow but AI-powered) 🤖 NEW
 
 ```bash
-# Backtest with local LLM (1 month)
+# Backtest with local LLM (1 month recommended)
 npm run backtest:local 2025-10-01 2025-11-24
 
-# Custom date range
+# Custom date range (max ~3-4 months with free tier)
 npm run backtest:local 2025-09-01 2025-11-24
 
 # Show help
@@ -301,10 +304,14 @@ npm run backtest:local -- --help
 - LM Studio must be running with Local Server started
 - A compatible model must be loaded
 
+**Limitations:**
+- ⚠️ Free Alpha Vantage tier provides last **~100 days** of data (3-4 months)
+- For longer backtests, upgrade to [Alpha Vantage Premium](https://www.alphavantage.co/premium/)
+
 **Performance:**
 - ⚠️ SLOW: 5-10 seconds per trading day
 - 1-month backtest (~20 days) = 2-3 minutes
-- 6-month backtest (~120 days) = 10-20 minutes
+- 3-month backtest (~60 days) = 5-10 minutes
 - 💰 100% free, no API costs
 - 🏠 100% private, all local
 
@@ -480,15 +487,17 @@ npm run report -- --export 30day-results.csv
 ## Example: Backtesting
 
 ```bash
-# Test your strategy over 6 months
-npm run backtest 2024-01-01 2024-06-30 100000
+# Test your strategy over 3 months (free tier limit)
+npm run backtest 2025-08-01 2025-11-24 100000
 
 # View results
 npm run report -- --backtest
 
 # Compare with another period
-npm run backtest 2024-07-01 2024-12-31 100000
+npm run backtest 2025-06-01 2025-09-01 100000
 ```
+
+**Note:** Free Alpha Vantage tier limits backtests to ~3-4 months of data.
 
 ## Performance Metrics
 
