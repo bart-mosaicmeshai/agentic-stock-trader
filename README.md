@@ -266,6 +266,8 @@ npm run report -- --export results.csv
 
 ### Run Backtests
 
+#### Rule-Based Backtest (Fast)
+
 ```bash
 # Backtest with recent dates (use current year data)
 npm run backtest 2025-08-01 2025-11-15
@@ -281,6 +283,34 @@ npm run backtest -- --help
 ```
 
 Backtest data is stored in `data/backtest.db` separately from live paper trading data.
+
+#### Local LLM Backtest (Slow but AI-powered) 🤖 NEW
+
+```bash
+# Backtest with local LLM (1 month)
+npm run backtest:local 2025-10-01 2025-11-24
+
+# Custom date range
+npm run backtest:local 2025-09-01 2025-11-24
+
+# Show help
+npm run backtest:local -- --help
+```
+
+**Prerequisites:**
+- LM Studio must be running with Local Server started
+- A compatible model must be loaded
+
+**Performance:**
+- ⚠️ SLOW: 5-10 seconds per trading day
+- 1-month backtest (~20 days) = 2-3 minutes
+- 6-month backtest (~120 days) = 10-20 minutes
+- 💰 100% free, no API costs
+- 🏠 100% private, all local
+
+**Storage:**
+- Local LLM backtest results stored in `data/backtest-local.db`
+- Separate from rule-based backtest and live trading data
 
 **Historical Data Caching:**
 - First backtest run fetches data from API and caches locally
