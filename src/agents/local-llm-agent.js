@@ -290,9 +290,16 @@ Use the available tools to analyze stocks and make trading decisions. After anal
     const summary = this.portfolio.getPortfolioSummary();
 
     if (decision.action === 'BUY') {
+      // Fetch current price if not provided
       if (!decision.price) {
-        console.log(`  ⚠️  ${decision.symbol}: No price information, skipping`);
-        return;
+        try {
+          const priceData = await this.marketDataClient.getCurrentPrice(decision.symbol);
+          decision.price = priceData.price;
+          console.log(`  ℹ️  Fetched current price for ${decision.symbol}: $${decision.price.toFixed(2)}`);
+        } catch (error) {
+          console.log(`  ⚠️  ${decision.symbol}: Could not fetch price, skipping`);
+          return;
+        }
       }
 
       let quantity = decision.quantity;
