@@ -10,7 +10,15 @@ cd agentic-stock-trader
 npm install
 cp .env.example .env
 # Add your API keys to .env
+
+# Run with Claude (recommended)
 npm run start:llm -- --run-now
+
+# OR run with local LLM (100% private)
+npm run start:local -- --run-now
+
+# OR run with rule-based (fastest)
+npm start -- --run-now
 ```
 
 **📚 New to the project?** Start with [QUICKSTART.md](./QUICKSTART.md)
@@ -168,9 +176,9 @@ npm start -- --run-now
 npm start -- --schedule
 ```
 
-#### **LLM Agent** (AI-Powered) ⭐ NEW
+#### **Claude Agent** (Cloud AI) ⭐ RECOMMENDED
 
-Uses Claude to make intelligent decisions by analyzing market data through MCP tools.
+Uses Claude Haiku to make intelligent decisions by analyzing market data through MCP tools.
 
 ```bash
 # View portfolio status
@@ -191,6 +199,32 @@ npm run start:llm -- --schedule
 4. Analyzes current positions for sell opportunities
 5. Makes reasoning-based decisions with confidence scores
 6. Executes trades through the portfolio manager
+
+#### **Local LLM Agent** (Private AI) 🔒 NEW
+
+Uses a local LLM via LM Studio for 100% private trading with zero API costs.
+
+**Prerequisites:**
+1. Install LM Studio from https://lmstudio.ai/
+2. Download a compatible model (e.g., Hermes-3-8B, Qwen 2.5, Llama 3.3)
+3. Start the Local Server in LM Studio (runs on http://localhost:1234)
+
+```bash
+# View portfolio status
+npm run start:local
+
+# Run trading immediately (Local LLM analyzes and trades)
+npm run start:local -- --run-now
+
+# Start daily scheduler (10am ET)
+npm run start:local -- --schedule
+```
+
+**Benefits:**
+- 🏠 100% Private - No data leaves your machine
+- 💰 Free - Zero API costs after setup
+- 🚀 Unlimited - No rate limits
+- 🔧 Customizable - Can fine-tune models
 
 **Example LLM Decision:**
 ```json
@@ -545,10 +579,16 @@ npm start -- --schedule
 npm start -- --schedule
 ```
 
-#### Using LLM Agent:
+#### Using Claude Agent:
 ```bash
-# Start LLM-powered trading
+# Start Claude-powered trading
 npm run start:llm -- --schedule
+```
+
+#### Using Local LLM Agent:
+```bash
+# Start local LLM-powered trading
+npm run start:local -- --schedule
 ```
 
 **Monitor Progress** (weekly):
@@ -563,11 +603,17 @@ npm run report
 npm run report -- --export 30day-evaluation.csv
 ```
 
-**Comparing Both Agents:**
-Run both agents side-by-side using separate databases to compare performance:
+**Comparing All Three Agents:**
+Run all three agents side-by-side to compare performance:
 ```bash
-# Use two terminal windows, each with different database path
-# Or run them on different schedules
+# Terminal 1: Rule-based
+npm start -- --run-now
+
+# Terminal 2: Claude
+npm run start:llm -- --run-now
+
+# Terminal 3: Local LLM
+npm run start:local -- --run-now
 ```
 
 ### Optimization Tips
