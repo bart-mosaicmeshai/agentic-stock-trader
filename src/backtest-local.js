@@ -51,12 +51,13 @@ class LLMBacktestStrategy extends TradingStrategy {
     console.log('📦 Fetching historical data (using cache when available)...');
     for (const symbol of this.watchlist) {
       try {
-        let data = this.cache.get(symbol, 'full');
+        // Use 'compact' for free tier (last 100 days, ~3-4 months)
+        let data = this.cache.get(symbol, 'compact');
 
         if (!data) {
           console.log(`  🌐 Fetching ${symbol} from API...`);
-          data = await this.agent.marketDataClient.getHistoricalPrices(symbol, 'full');
-          this.cache.set(symbol, data, 'full');
+          data = await this.agent.marketDataClient.getHistoricalPrices(symbol, 'compact');
+          this.cache.set(symbol, data, 'compact');
         }
 
         this.historicalData[symbol] = data.prices;

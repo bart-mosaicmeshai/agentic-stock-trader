@@ -34,16 +34,17 @@ class MCPBacktestStrategy extends TradingStrategy {
     console.log('Fetching historical data (using cache when available)...');
     for (const symbol of this.watchlist) {
       try {
-        // Try to get from cache first
-        let data = this.cache.get(symbol, 'full');
+        // Try to get from cache first (compact = last 100 days for free tier)
+        let data = this.cache.get(symbol, 'compact');
 
         if (!data) {
           // Cache miss - fetch from API
           console.log(`  🌐 Fetching ${symbol} from API...`);
-          data = await this.marketDataClient.getHistoricalPrices(symbol, 'full');
+          // Use 'compact' for free tier (last 100 days, ~3-4 months)
+          data = await this.marketDataClient.getHistoricalPrices(symbol, 'compact');
 
           // Save to cache
-          this.cache.set(symbol, data, 'full');
+          this.cache.set(symbol, data, 'compact');
         }
 
         this.historicalData[symbol] = data.prices;
