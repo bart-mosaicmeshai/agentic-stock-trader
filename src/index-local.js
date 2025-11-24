@@ -78,7 +78,7 @@ async function main() {
       if (summary.totalReturn !== null && summary.totalReturn !== undefined) {
         console.log(`📊 Total Return: ${summary.totalReturn.toFixed(2)}%`);
       }
-      if (summary.dailyReturn !== null) {
+      if (summary.dailyReturn !== null && summary.dailyReturn !== undefined) {
         console.log(`📈 Daily Return: ${summary.dailyReturn.toFixed(2)}%`);
       }
 
