@@ -90,9 +90,9 @@ class MCPBacktestStrategy extends TradingStrategy {
       }
     }
 
-    // Debug: Show first few days of signals
-    if (debugSignals.length > 0 && Math.random() < 0.05) {  // 5% sample
-      console.log(`[DEBUG ${date}] Signals:`, debugSignals.map(s => `${s.symbol}:${s.action}(${s.confidence || 'N/A'})`).join(', '));
+    // Debug: Show all signals (deterministic output)
+    if (debugSignals.length > 0) {
+      console.log(`[DEBUG ${date}] Signals:`, debugSignals.map(s => `${s.symbol}:${s.action}(${(s.confidence * 100).toFixed(1)}%)`).join(', '));
     }
 
     return signals;
@@ -116,10 +116,7 @@ class MCPBacktestStrategy extends TradingStrategy {
     try {
       const analysis = await this.analysisClient.generateSignals(symbol, historicalPrices);
 
-      // Debug: Log occasionally to see what's happening
-      if (Math.random() < 0.01) {  // 1% sample
-        console.log(`[DEBUG] ${symbol} on ${date}: ${analysis.signal} (conf: ${(analysis.confidence * 100).toFixed(1)}%, need: ${(this.minConfidence * 100).toFixed(0)}%)`);
-      }
+      // Note: Individual symbol analysis is verbose, only shown in signal summary above
 
       if (analysis.signal === 'BUY' && analysis.confidence >= this.minConfidence) {
         // Calculate position size
