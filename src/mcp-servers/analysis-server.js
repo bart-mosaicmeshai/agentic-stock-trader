@@ -559,9 +559,10 @@ class AnalysisServer {
     }
 
     // Determine signal
-    if (confidence > 0.3) {
+    // Lowered thresholds to be more active in all market conditions
+    if (confidence > 0.15) {  // Changed from 0.3 to 0.15
       signal = 'BUY';
-    } else if (confidence < -0.3) {
+    } else if (confidence < -0.15) {  // Changed from -0.3 to -0.15
       signal = 'SELL';
     }
 
