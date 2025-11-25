@@ -254,10 +254,13 @@ class MCPBacktestStrategy extends TradingStrategy {
 async function main() {
   const args = process.argv.slice(2);
 
+  // Filter out flags
+  const nonFlagArgs = args.filter(arg => !arg.startsWith('--'));
+
   // Parse command line arguments
-  const startDate = args[0] || '2024-01-01';
-  const endDate = args[1] || '2024-12-31';
-  const initialCapital = parseFloat(args[2] || process.env.INITIAL_CAPITAL || '100000');
+  const startDate = nonFlagArgs[0] || '2024-01-01';
+  const endDate = nonFlagArgs[1] || '2024-12-31';
+  const initialCapital = parseFloat(nonFlagArgs[2] || process.env.INITIAL_CAPITAL || '100000');
 
   console.log('🔬 Backtesting Mode\n');
 
