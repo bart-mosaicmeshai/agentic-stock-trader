@@ -92,7 +92,10 @@ class MCPBacktestStrategy extends TradingStrategy {
 
     // Debug: Show all signals (deterministic output)
     if (debugSignals.length > 0) {
-      console.log(`[DEBUG ${date}] Signals:`, debugSignals.map(s => `${s.symbol}:${s.action}(${(s.confidence * 100).toFixed(1)}%)`).join(', '));
+      console.log(`[DEBUG ${date}] Signals:`, debugSignals.map(s => {
+        const conf = s.confidence !== undefined ? `${(s.confidence * 100).toFixed(1)}%` : 'N/A';
+        return `${s.symbol}:${s.action}(${conf})`;
+      }).join(', '));
     }
 
     return signals;
@@ -116,13 +119,14 @@ class MCPBacktestStrategy extends TradingStrategy {
     try {
       const analysis = await this.analysisClient.generateSignals(symbol, historicalPrices);
 
-      // Debug: Show ALL signals on first day and sample of BUY signals
+      // Debug: Show ALL signals on first day, all BUY signals, and sample others
       const emoji = analysis.signal === 'BUY' ? '🟢' : analysis.signal === 'SELL' ? '🔴' : '⚪';
       const passed = analysis.confidence >= this.minConfidence ? '✅' : '❌';
 
       // Always show first day and all BUY signals
       if (date === '2025-08-01' || analysis.signal === 'BUY' || (Math.random() < 0.05 && analysis.signal !== 'BUY')) {
-        console.log(`[${date}] ${emoji} ${symbol}: ${analysis.signal} ${(analysis.confidence * 100).toFixed(1)}% ${passed}`);
+        const indicators = analysis.indicators ? `RSI:${analysis.indicators.rsi?.toFixed(1) || '?'} SMA20:${analysis.indicators.sma20?.toFixed(2) || '?'}` : '';
+        console.log(`[${date}] ${emoji} ${symbol}: ${analysis.signal} ${(analysis.confidence * 100).toFixed(1)}% ${passed} ${indicators}`);
       }
 
       if (analysis.signal === 'BUY' && analysis.confidence >= this.minConfidence) {

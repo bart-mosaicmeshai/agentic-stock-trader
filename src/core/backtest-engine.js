@@ -212,20 +212,36 @@ export class BacktestEngine {
 
     // Calculate win rate
     const sellTrades = trades.filter(t => t.action === 'SELL');
+    const buyTrades = trades.filter(t => t.action === 'BUY');
     let winningTrades = 0;
 
     for (const sell of sellTrades) {
-      const buyTrades = trades.filter(t =>
-        t.action === 'BUY' &&
+      // Find matching buy trades for this symbol
+      const matchingBuys = buyTrades.filter(t =>
         t.symbol === sell.symbol &&
         t.trade_date < sell.trade_date
       );
 
-      if (buyTrades.length > 0) {
-        const avgBuyPrice = buyTrades.reduce((sum, b) => sum + b.price, 0) / buyTrades.length;
-        if (sell.price > avgBuyPrice) {
-          winningTrades++;
+      // Determine average buy price (or use sell price as proxy if no buys found - for --with-positions)
+      let avgBuyPrice;
+      if (matchingBuys.length > 0) {
+        avgBuyPrice = matchingBuys.reduce((sum, b) => sum + b.price, 0) / matchingBuys.length;
+      } else {
+        // No BUY trades found - probably started with positions
+        // Parse reasoning for profit/loss info
+        const plMatch = sell.reasoning?.match(/\(([+-]?\d+\.?\d*)%\)/);
+        if (plMatch) {
+          const profitLossPercent = parseFloat(plMatch[1]);
+          // If positive P/L, it's a win
+          if (profitLossPercent > 0) {
+            winningTrades++;
+          }
+          continue;
         }
+      }
+
+      if (avgBuyPrice && sell.price > avgBuyPrice) {
+        winningTrades++;
       }
     }
 
