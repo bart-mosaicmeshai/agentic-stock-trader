@@ -389,7 +389,11 @@ Respond with your decision in JSON format:
     const allPrices = this.historicalData[symbol];
     if (!allPrices) return null;
 
-    return allPrices.filter(p => p.date <= date).slice(0, 100);
+    // Filter prices up to and including the given date
+    // Note: allPrices is in descending order (newest first), so we need to reverse
+    const filtered = allPrices.filter(p => p.date <= date);
+    // Return in ascending order (oldest first) - LLM expects chronological order
+    return filtered.reverse().slice(-100); // Take last 100 days (most recent)
   }
 
   getPriceForDate(symbol, date) {

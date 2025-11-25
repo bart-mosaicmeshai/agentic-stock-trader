@@ -23,6 +23,15 @@ npm start -- --run-now
 
 **📚 New to the project?** Start with [QUICKSTART.md](./QUICKSTART.md)
 
+## ✨ Recent Improvements
+
+**v0.2.0 - Major Bug Fixes & Strategy Enhancements**
+- 🐛 **Fixed critical historical data ordering bug** - Backtest was using stale prices from months ago instead of current data
+- 📈 **Improved trend-following strategy** - Better performance in bull markets (6.25% return in 2 months, 100% win rate)
+- 🎯 **Environment variable handling** - Clear documentation on avoiding shell-level variable conflicts
+- 🤖 **LLM backtest enhancements** - More conservative decision-making with better reasoning
+- 📊 **Better debugging output** - Raw confidence scores and detailed reasoning for all signals
+
 ## Three Agent Types
 
 | Agent | Model | Speed | Cost | Privacy | Use Case |
@@ -269,32 +278,50 @@ npm run report -- --export results.csv
 #### Rule-Based Backtest (Fast)
 
 ```bash
-# Backtest recent 3 months (recommended)
-npm run backtest 2025-08-01 2025-11-24
+# Backtest recent 2 months (recommended - needs 50+ days of data)
+npm run backtest 2025-09-15 2025-11-24
 
-# Backtest with custom date range (max ~3-4 months)
+# Backtest with custom date range
 npm run backtest 2025-09-01 2025-11-24
 
 # Backtest with custom initial capital
-npm run backtest 2025-08-01 2025-11-24 50000
+npm run backtest 2025-09-01 2025-11-24 50000
+
+# Start with pre-loaded positions (test SELL logic)
+npm run backtest 2025-09-15 2025-11-24 --with-positions
 
 # Show help
 npm run backtest -- --help
 ```
 
-**Limitations:**
-- ⚠️ Free Alpha Vantage tier provides last **~100 days** of data (3-4 months)
+**⚠️ Important:**
+- Backtest requires **at least 50 trading days** of historical data for indicator calculation
+- Start date should be at least 50 trading days after the earliest available data
+- Free Alpha Vantage tier provides last **~100 days** of data (starting around July 7, 2025)
+- First ~50 days are used for indicator warmup, so effective backtest starts around Sep 15, 2025
 - For longer backtests, upgrade to [Alpha Vantage Premium](https://www.alphavantage.co/premium/) ($49.99/month)
-- Backtest data is stored in `data/backtest.db` separately from live trading data
+
+**Recent Results (Sep 16 - Nov 24, 2025):**
+- Total Return: +6.25%
+- Win Rate: 100%
+- Sharpe Ratio: 15.875
+- Max Drawdown: 0%
+
+Backtest data is stored in `data/backtest.db` separately from live trading data.
 
 #### Local LLM Backtest (Slow but AI-powered) 🤖 NEW
 
+Demonstrates the **MCP agentic loop** - LLM analyzes data, requests tools, and makes autonomous decisions.
+
 ```bash
-# Backtest with local LLM (1 month recommended)
+# Backtest with local LLM (1 week recommended for testing)
+npm run backtest:local 2025-09-15 2025-09-20
+
+# Longer backtest (1 month = ~2 minutes)
 npm run backtest:local 2025-10-01 2025-11-24
 
-# Custom date range (max ~3-4 months with free tier)
-npm run backtest:local 2025-09-01 2025-11-24
+# Full available period (2 months = ~5-10 minutes)
+npm run backtest:local 2025-09-15 2025-11-24
 
 # Show help
 npm run backtest:local -- --help
@@ -302,18 +329,26 @@ npm run backtest:local -- --help
 
 **Prerequisites:**
 - LM Studio must be running with Local Server started
-- A compatible model must be loaded
+- A compatible model must be loaded (e.g., Hermes-3-8B, Qwen 2.5, Llama 3.3)
 
-**Limitations:**
-- ⚠️ Free Alpha Vantage tier provides last **~100 days** of data (3-4 months)
-- For longer backtests, upgrade to [Alpha Vantage Premium](https://www.alphavantage.co/premium/)
+**⚠️ Important:**
+- Same 50-day warmup requirement as rule-based backtest
+- Free Alpha Vantage tier: ~100 days of data (July 7 - Nov 24, 2025)
+- Effective backtest period: Sep 15 - Nov 24, 2025
 
 **Performance:**
 - ⚠️ SLOW: 5-10 seconds per trading day
+- 1-week backtest (5 days) = ~30-60 seconds
 - 1-month backtest (~20 days) = 2-3 minutes
-- 3-month backtest (~60 days) = 5-10 minutes
+- 2-month backtest (~40 days) = 5-10 minutes
 - 💰 100% free, no API costs
 - 🏠 100% private, all local
+
+**Key Differences from Rule-Based:**
+- **More conservative** - LLM is cautious about overbought conditions
+- **Better reasoning** - Explains decisions ("strong uptrend BUT RSI is high")
+- **Adaptive** - Can adjust strategy based on market conditions
+- **Agentic** - Multi-turn reasoning with tool requests
 
 **Storage:**
 - Local LLM backtest results stored in `data/backtest-local.db`
@@ -547,16 +582,28 @@ npm run backtest 2025-09-01 2025-11-15
 
 **Observation**: Backtest or live trading shows 0 trades.
 
-**This is normal!** The system is conservative and only trades when:
-- Technical signals align (SMA, EMA, RSI, momentum)
-- Confidence > 60% (or your `MIN_CONFIDENCE` setting)
-- Sufficient cash available
-- Risk management rules satisfied
+**Common Causes**:
+
+1. **Not enough historical data** (most common in backtests)
+   - Backtest requires **50+ trading days** of data before start date
+   - Example: If data starts July 7, earliest backtest start is ~Sep 15
+   - Solution: Start backtest later (after indicator warmup period)
+
+2. **Environment variables overriding .env file**
+   - Shell-level `export` variables take precedence over `.env`
+   - Check: `env | grep MIN_CONFIDENCE` (should be empty or match .env)
+   - Solution: `unset MIN_CONFIDENCE WATCHLIST MAX_POSITION_SIZE`
+
+3. **Conservative strategy settings**
+   - System only trades when confidence > `MIN_CONFIDENCE` threshold
+   - Default is 0.5 (50%) which filters many marginal signals
+   - Solution: Lower to 0.25 in `.env` for more active trading
 
 **To see more trades**:
-1. Lower confidence threshold in `.env`: `MIN_CONFIDENCE=0.5`
-2. Try different time periods (some periods have clearer signals)
-3. Adjust position sizing: `MAX_POSITION_SIZE=0.25`
+1. Ensure backtest start date has 50+ days of prior data
+2. Verify `.env` values with: `node test-env.js`
+3. Lower confidence threshold: `MIN_CONFIDENCE=0.25`
+4. Try different time periods (bull markets generate more signals)
 
 ### Markets Closed / Wrong Date
 

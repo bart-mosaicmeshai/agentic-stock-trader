@@ -59,6 +59,11 @@ export class BacktestEngine {
 
     console.log(`Trading on ${tradingDates.length} days...\n`);
 
+    // Debug first day
+    if (tradingDates.length > 0) {
+      console.log(`First trading date: ${tradingDates[0]}`);
+    }
+
     // Simulate trading on each date at 10am ET
     for (const date of tradingDates) {
       await this.simulateTradingDay(backtestId, date, state);

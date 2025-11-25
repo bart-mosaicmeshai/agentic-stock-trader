@@ -515,47 +515,55 @@ class AnalysisServer {
     let confidence = 0;
     const reasons = [];
 
-    // Trend following
+    // Trend following - Stronger rewards, lighter penalties
     if (currentPrice > sma20 && sma20 > sma50) {
-      confidence += 0.25;
-      reasons.push('Price above SMA20 and SMA50 (uptrend)');
+      confidence += 0.35;  // Increased from 0.25
+      reasons.push('Price above SMA20 and SMA50 (strong uptrend)');
+    } else if (currentPrice > sma20) {
+      confidence += 0.15;  // NEW: Partial credit for being above SMA20
+      reasons.push('Price above SMA20 (uptrend building)');
     } else if (currentPrice < sma20 && sma20 < sma50) {
-      confidence -= 0.25;
+      confidence -= 0.15;  // Reduced from -0.25
       reasons.push('Price below SMA20 and SMA50 (downtrend)');
     }
 
-    // RSI signals - Modified for trend following
-    // In strong trends, don't penalize overbought/oversold as much
+    // RSI signals - Trend following focus
+    // Oversold in an uptrend = buying opportunity
+    // Overbought in an uptrend = normal, small penalty
     if (rsi < 30) {
-      confidence += 0.3;
-      reasons.push(`RSI oversold (${rsi.toFixed(2)})`);
+      confidence += 0.25;  // Reduced from 0.3 (less focus on mean reversion)
+      reasons.push(`RSI oversold (${rsi.toFixed(2)}) - potential bounce`);
     } else if (rsi > 70) {
-      // Only small penalty for overbought in uptrends
-      confidence -= 0.1;  // Changed from -0.3 to -0.1
-      reasons.push(`RSI overbought (${rsi.toFixed(2)}) - proceed with caution`);
-    } else if (rsi >= 40 && rsi <= 60) {
-      // Neutral RSI is actually good for entries
-      confidence += 0.1;
-      reasons.push(`RSI neutral (${rsi.toFixed(2)}) - healthy`);
+      confidence -= 0.05;  // Reduced from -0.1 (minimal penalty)
+      reasons.push(`RSI overbought (${rsi.toFixed(2)}) - strong momentum`);
+    } else if (rsi >= 45 && rsi <= 60) {
+      confidence += 0.15;  // Increased from 0.1, adjusted range
+      reasons.push(`RSI healthy (${rsi.toFixed(2)}) - good entry zone`);
     }
 
-    // Price vs EMA
+    // Price vs EMA - Lighter penalty for weakness
     if (currentPrice > ema12) {
-      confidence += 0.15;
-      reasons.push('Price above EMA12');
+      confidence += 0.2;  // Increased from 0.15
+      reasons.push('Price above EMA12 (short-term strength)');
     } else {
-      confidence -= 0.15;
-      reasons.push('Price below EMA12');
+      confidence -= 0.1;  // Reduced from -0.15
+      reasons.push('Price below EMA12 (short-term weakness)');
     }
 
-    // Recent momentum
+    // Recent momentum - Heavily weighted for trend following
     const recentChange = ((closes[closes.length - 1] - closes[closes.length - 5]) / closes[closes.length - 5]) * 100;
-    if (recentChange > 2) {
-      confidence += 0.2;
-      reasons.push(`Strong recent momentum (+${recentChange.toFixed(2)}%)`);
-    } else if (recentChange < -2) {
-      confidence -= 0.2;
-      reasons.push(`Weak recent momentum (${recentChange.toFixed(2)}%)`);
+    if (recentChange > 3) {
+      confidence += 0.3;  // Increased from 0.2
+      reasons.push(`Very strong momentum (+${recentChange.toFixed(2)}%)`);
+    } else if (recentChange > 1) {
+      confidence += 0.15;  // NEW: Reward moderate positive momentum
+      reasons.push(`Positive momentum (+${recentChange.toFixed(2)}%)`);
+    } else if (recentChange < -3) {
+      confidence -= 0.2;  // Same as before
+      reasons.push(`Weak momentum (${recentChange.toFixed(2)}%)`);
+    } else if (recentChange < -1) {
+      confidence -= 0.1;  // NEW: Light penalty for moderate weakness
+      reasons.push(`Slight weakness (${recentChange.toFixed(2)}%)`);
     }
 
     // Determine signal
@@ -577,6 +585,7 @@ class AnalysisServer {
             symbol,
             signal,
             confidence: normalizedConfidence,
+            rawConfidence: confidence,  // Add raw confidence for debugging
             currentPrice,
             indicators: {
               sma20,

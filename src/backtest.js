@@ -24,6 +24,9 @@ class MCPBacktestStrategy extends TradingStrategy {
 
   async initialize() {
     console.log('Initializing MCP clients for backtesting...');
+    console.log('Watchlist:', this.watchlist);
+    console.log('MIN_CONFIDENCE:', this.minConfidence);
+    console.log('MAX_POSITION_SIZE:', this.maxPositionSize);
     this.marketDataClient = new MarketDataClient();
     this.analysisClient = new AnalysisClient();
 
@@ -67,6 +70,11 @@ class MCPBacktestStrategy extends TradingStrategy {
     const signals = [];
     const debugSignals = []; // Track all signals for debugging
 
+    // Debug first day
+    if (date === '2025-09-16') {
+      console.log(`\n[${date}] Analyzing watchlist:`, this.watchlist);
+    }
+
     // Analyze each symbol in watchlist for buy opportunities
     for (const symbol of this.watchlist) {
       // Skip if we already have a position
@@ -74,7 +82,16 @@ class MCPBacktestStrategy extends TradingStrategy {
         continue;
       }
 
+      if (date === '2025-09-16') {
+        console.log(`  Analyzing ${symbol} for BUY...`);
+      }
+
       const signal = await this.analyzeBuyOpportunity(symbol, date, state);
+
+      if (date === '2025-09-16') {
+        console.log(`    Result: ${signal ? signal.action : 'No signal'}`);
+      }
+
       if (signal) {
         signals.push(signal);
         debugSignals.push({ symbol, ...signal });
@@ -104,14 +121,28 @@ class MCPBacktestStrategy extends TradingStrategy {
   async analyzeBuyOpportunity(symbol, date, state) {
     const historicalPrices = this.getHistoricalPricesUpToDate(symbol, date);
 
+    if (date === '2025-09-16') {
+      console.log(`    ${symbol}: historicalPrices=${historicalPrices?.length || 0} points`);
+    }
+
     if (!historicalPrices || historicalPrices.length < 50) {
+      if (date === '2025-09-16') {
+        console.log(`    ${symbol}: SKIPPED - not enough data (need 50, have ${historicalPrices?.length || 0})`);
+      }
       return null;
     }
 
     // Get price for this date (or closest previous trading day)
     const currentPrice = this.getPriceForDate(symbol, date);
+    if (date === '2025-09-16') {
+      console.log(`    ${symbol}: currentPrice=${currentPrice || 'none'}`);
+    }
+
     if (!currentPrice) {
       // No data for this date (weekend/holiday) - skip
+      if (date === '2025-09-16') {
+        console.log(`    ${symbol}: SKIPPED - no price for this date`);
+      }
       return null;
     }
 
@@ -123,10 +154,20 @@ class MCPBacktestStrategy extends TradingStrategy {
       const emoji = analysis.signal === 'BUY' ? '🟢' : analysis.signal === 'SELL' ? '🔴' : '⚪';
       const passed = analysis.confidence >= this.minConfidence ? '✅' : '❌';
 
-      // Always show first day and all BUY signals
-      if (date === '2025-08-01' || analysis.signal === 'BUY' || (Math.random() < 0.05 && analysis.signal !== 'BUY')) {
-        const indicators = analysis.indicators ? `RSI:${analysis.indicators.rsi?.toFixed(1) || '?'} SMA20:${analysis.indicators.sma20?.toFixed(2) || '?'}` : '';
-        console.log(`[${date}] ${emoji} ${symbol}: ${analysis.signal} ${(analysis.confidence * 100).toFixed(1)}% ${passed} ${indicators}`);
+      // Show first 2 days for ALL stocks, all BUY signals, and sample others
+      const isEarlyDay = date === '2025-09-16' || date === '2025-09-17';
+      if (isEarlyDay || analysis.signal === 'BUY') {
+        const indicators = analysis.indicators ? `RSI:${analysis.indicators.rsi?.toFixed(1) || '?'} SMA20:${analysis.indicators.sma20?.toFixed(2) || '?'} Price:${analysis.currentPrice?.toFixed(2) || '?'}` : '';
+        const rawConf = analysis.rawConfidence !== undefined ? `raw=${analysis.rawConfidence.toFixed(2)}` : '';
+        console.log(`[${date}] ${emoji} ${symbol}: ${analysis.signal} ${(analysis.confidence * 100).toFixed(1)}% ${passed} ${rawConf} ${indicators}`);
+        if (isEarlyDay) {
+          console.log(`  Reasons: ${analysis.reasons?.join('; ') || 'none'}`);
+        }
+      }
+
+      // Force output for first trading day to debug
+      if (date === '2025-09-16') {
+        console.log(`  [DEBUG] ${symbol} raw analysis:`, JSON.stringify(analysis.reasons || []));
       }
 
       if (analysis.signal === 'BUY' && analysis.confidence >= this.minConfidence) {
@@ -226,7 +267,10 @@ class MCPBacktestStrategy extends TradingStrategy {
     if (!allPrices) return null;
 
     // Filter prices up to and including the given date
-    return allPrices.filter(p => p.date <= date).slice(0, 100);
+    // Note: allPrices is in descending order (newest first), so we need to reverse
+    const filtered = allPrices.filter(p => p.date <= date);
+    // Return in ascending order (oldest first) - analysis server expects this
+    return filtered.reverse().slice(-100); // Take last 100 days (most recent)
   }
 
   getPriceForDate(symbol, date) {
