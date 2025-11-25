@@ -68,12 +68,6 @@ class MCPBacktestStrategy extends TradingStrategy {
 
   async generateSignals(date, state) {
     const signals = [];
-    const debugSignals = []; // Track all signals for debugging
-
-    // Debug first day
-    if (date === '2025-09-16') {
-      console.log(`\n[${date}] Analyzing watchlist:`, this.watchlist);
-    }
 
     // Analyze each symbol in watchlist for buy opportunities
     for (const symbol of this.watchlist) {
@@ -82,19 +76,10 @@ class MCPBacktestStrategy extends TradingStrategy {
         continue;
       }
 
-      if (date === '2025-09-16') {
-        console.log(`  Analyzing ${symbol} for BUY...`);
-      }
-
       const signal = await this.analyzeBuyOpportunity(symbol, date, state);
-
-      if (date === '2025-09-16') {
-        console.log(`    Result: ${signal ? signal.action : 'No signal'}`);
-      }
 
       if (signal) {
         signals.push(signal);
-        debugSignals.push({ symbol, ...signal });
       }
     }
 
@@ -103,16 +88,7 @@ class MCPBacktestStrategy extends TradingStrategy {
       const sellSignal = await this.evaluateSellOpportunity(symbol, date, state, position);
       if (sellSignal) {
         signals.push(sellSignal);
-        debugSignals.push({ symbol, ...sellSignal });
       }
-    }
-
-    // Debug: Show all signals (deterministic output)
-    if (debugSignals.length > 0) {
-      console.log(`[DEBUG ${date}] Signals:`, debugSignals.map(s => {
-        const conf = s.confidence !== undefined ? `${(s.confidence * 100).toFixed(1)}%` : 'N/A';
-        return `${s.symbol}:${s.action}(${conf})`;
-      }).join(', '));
     }
 
     return signals;
@@ -121,54 +97,20 @@ class MCPBacktestStrategy extends TradingStrategy {
   async analyzeBuyOpportunity(symbol, date, state) {
     const historicalPrices = this.getHistoricalPricesUpToDate(symbol, date);
 
-    if (date === '2025-09-16') {
-      console.log(`    ${symbol}: historicalPrices=${historicalPrices?.length || 0} points`);
-    }
-
     if (!historicalPrices || historicalPrices.length < 50) {
-      if (date === '2025-09-16') {
-        console.log(`    ${symbol}: SKIPPED - not enough data (need 50, have ${historicalPrices?.length || 0})`);
-      }
       return null;
     }
 
     // Get price for this date (or closest previous trading day)
     const currentPrice = this.getPriceForDate(symbol, date);
-    if (date === '2025-09-16') {
-      console.log(`    ${symbol}: currentPrice=${currentPrice || 'none'}`);
-    }
-
     if (!currentPrice) {
       // No data for this date (weekend/holiday) - skip
-      if (date === '2025-09-16') {
-        console.log(`    ${symbol}: SKIPPED - no price for this date`);
-      }
       return null;
     }
 
     // Generate signals using analysis
     try {
       const analysis = await this.analysisClient.generateSignals(symbol, historicalPrices);
-
-      // Debug: Show ALL signals on first day, all BUY signals, and sample others
-      const emoji = analysis.signal === 'BUY' ? '🟢' : analysis.signal === 'SELL' ? '🔴' : '⚪';
-      const passed = analysis.confidence >= this.minConfidence ? '✅' : '❌';
-
-      // Show first 2 days for ALL stocks, all BUY signals, and sample others
-      const isEarlyDay = date === '2025-09-16' || date === '2025-09-17';
-      if (isEarlyDay || analysis.signal === 'BUY') {
-        const indicators = analysis.indicators ? `RSI:${analysis.indicators.rsi?.toFixed(1) || '?'} SMA20:${analysis.indicators.sma20?.toFixed(2) || '?'} Price:${analysis.currentPrice?.toFixed(2) || '?'}` : '';
-        const rawConf = analysis.rawConfidence !== undefined ? `raw=${analysis.rawConfidence.toFixed(2)}` : '';
-        console.log(`[${date}] ${emoji} ${symbol}: ${analysis.signal} ${(analysis.confidence * 100).toFixed(1)}% ${passed} ${rawConf} ${indicators}`);
-        if (isEarlyDay) {
-          console.log(`  Reasons: ${analysis.reasons?.join('; ') || 'none'}`);
-        }
-      }
-
-      // Force output for first trading day to debug
-      if (date === '2025-09-16') {
-        console.log(`  [DEBUG] ${symbol} raw analysis:`, JSON.stringify(analysis.reasons || []));
-      }
 
       if (analysis.signal === 'BUY' && analysis.confidence >= this.minConfidence) {
         // Calculate position size
