@@ -524,13 +524,19 @@ class AnalysisServer {
       reasons.push('Price below SMA20 and SMA50 (downtrend)');
     }
 
-    // RSI signals
+    // RSI signals - Modified for trend following
+    // In strong trends, don't penalize overbought/oversold as much
     if (rsi < 30) {
       confidence += 0.3;
       reasons.push(`RSI oversold (${rsi.toFixed(2)})`);
     } else if (rsi > 70) {
-      confidence -= 0.3;
-      reasons.push(`RSI overbought (${rsi.toFixed(2)})`);
+      // Only small penalty for overbought in uptrends
+      confidence -= 0.1;  // Changed from -0.3 to -0.1
+      reasons.push(`RSI overbought (${rsi.toFixed(2)}) - proceed with caution`);
+    } else if (rsi >= 40 && rsi <= 60) {
+      // Neutral RSI is actually good for entries
+      confidence += 0.1;
+      reasons.push(`RSI neutral (${rsi.toFixed(2)}) - healthy`);
     }
 
     // Price vs EMA
