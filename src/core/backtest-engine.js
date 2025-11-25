@@ -14,7 +14,7 @@ export class BacktestEngine {
    * @param {string} endDate - End date in YYYY-MM-DD format
    * @param {number} initialCapital - Starting capital
    */
-  async runBacktest(startDate, endDate, initialCapital) {
+  async runBacktest(startDate, endDate, initialCapital, startWithPositions = false) {
     console.log(`\n📊 Starting backtest from ${startDate} to ${endDate}`);
     console.log(`Initial Capital: $${initialCapital.toFixed(2)}\n`);
 
@@ -30,6 +30,32 @@ export class BacktestEngine {
 
     // Get trading dates (weekdays between start and end)
     const tradingDates = this.getTradingDates(startDate, endDate);
+
+    // Optional: Start with positions (for testing SELL logic)
+    if (startWithPositions && this.tradingStrategy.watchlist) {
+      const firstDate = tradingDates[0];
+      console.log('🎯 Starting with pre-loaded positions ($20k each stock):\n');
+
+      for (const symbol of this.tradingStrategy.watchlist) {
+        const price = this.tradingStrategy.getPriceForDate(symbol, firstDate);
+        if (price) {
+          const investmentPerStock = 20000;
+          const quantity = Math.floor(investmentPerStock / price);
+          const actualCost = quantity * price;
+
+          state.positions.set(symbol, {
+            quantity: quantity,
+            averageCost: price
+          });
+          state.cash -= actualCost;
+
+          console.log(`  📦 ${symbol}: ${quantity} shares @ $${price.toFixed(2)} = $${actualCost.toFixed(2)}`);
+        }
+      }
+
+      console.log(`\n💰 Remaining cash: $${state.cash.toFixed(2)}`);
+      console.log(`📊 Starting portfolio value: $${(state.cash + Array.from(state.positions.values()).reduce((sum, pos) => sum + (pos.quantity * pos.averageCost), 0)).toFixed(2)}\n`);
+    }
 
     console.log(`Trading on ${tradingDates.length} days...\n`);
 

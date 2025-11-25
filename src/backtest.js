@@ -116,7 +116,14 @@ class MCPBacktestStrategy extends TradingStrategy {
     try {
       const analysis = await this.analysisClient.generateSignals(symbol, historicalPrices);
 
-      // Note: Individual symbol analysis is verbose, only shown in signal summary above
+      // Debug: Show ALL signals on first day and sample of BUY signals
+      const emoji = analysis.signal === 'BUY' ? '🟢' : analysis.signal === 'SELL' ? '🔴' : '⚪';
+      const passed = analysis.confidence >= this.minConfidence ? '✅' : '❌';
+
+      // Always show first day and all BUY signals
+      if (date === '2025-08-01' || analysis.signal === 'BUY' || (Math.random() < 0.05 && analysis.signal !== 'BUY')) {
+        console.log(`[${date}] ${emoji} ${symbol}: ${analysis.signal} ${(analysis.confidence * 100).toFixed(1)}% ${passed}`);
+      }
 
       if (analysis.signal === 'BUY' && analysis.confidence >= this.minConfidence) {
         // Calculate position size
@@ -269,8 +276,11 @@ async function main() {
     // Create backtest engine
     const backtestEngine = new BacktestEngine(db, strategy);
 
+    // Check if --with-positions flag is passed
+    const startWithPositions = process.argv.includes('--with-positions');
+
     // Run backtest
-    await backtestEngine.runBacktest(startDate, endDate, initialCapital);
+    await backtestEngine.runBacktest(startDate, endDate, initialCapital, startWithPositions);
 
     console.log('\n✓ Backtest completed');
 
