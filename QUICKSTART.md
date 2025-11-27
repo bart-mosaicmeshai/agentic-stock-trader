@@ -111,8 +111,17 @@ Runs every weekday at 10am ET.
 
 ### Backtest a Strategy
 ```bash
-npm run backtest 2025-08-01 2025-11-15
+# Rules-based (fastest, free)
+npm run backtest 2025-09-15 2025-11-24
+
+# Claude Haiku (cloud AI, ~$0.15 for 2 months)
+npm run backtest:claude 2025-09-15 2025-11-24
+
+# Local LLM (private AI, free - requires LM Studio)
+npm run backtest:local 2025-09-15 2025-11-24
 ```
+
+**See [BACKTEST-COMPARISON.md](./BACKTEST-COMPARISON.md)** for detailed performance analysis of all three agents.
 
 ### Compare All Three Agents
 ```bash
@@ -236,7 +245,9 @@ npm run report -- --stats        # Statistics
 npm run report -- --export data.csv
 
 # Backtesting
-npm run backtest 2025-08-01 2025-11-15
+npm run backtest 2025-09-15 2025-11-24          # Rules-based
+npm run backtest:claude 2025-09-15 2025-11-24   # Claude Haiku
+npm run backtest:local 2025-09-15 2025-11-24    # Local LLM
 
 # Testing
 node test-claude-model.js        # Test Claude models

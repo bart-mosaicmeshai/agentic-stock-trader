@@ -1,5 +1,84 @@
 # Changelog
 
+## [0.3.0] - 2025-11-27
+
+### Added - Claude Haiku Backtest & 3-Agent Comparison
+
+#### New Features
+- **Claude Haiku Backtesting** using Anthropic API
+  - Cloud AI-powered trading decisions on historical data
+  - MCP tool usage for technical analysis (SMA, RSI, MACD, trend detection)
+  - Natural language reasoning for each trading decision
+  - Cost-effective: ~$0.10-0.15 per 2-month backtest (5 stocks)
+
+#### New Files
+- `src/backtest-claude.js` - Claude Haiku backtesting script with agentic loop
+- `BACKTEST-COMPARISON.md` - Comprehensive 3-agent performance analysis
+- New npm script: `npm run backtest:claude`
+
+#### Backtest Results (Sep 15 - Nov 24, 2025)
+
+**Rules-Based Engine:**
+- Return: +6.25% | Win Rate: 100% | Sharpe: 15.87 | Cost: $0
+
+**Local LLM (LM Studio):**
+- Return: +6.13% | Win Rate: 100% | Sharpe: 11.22 | Cost: $0
+
+**Claude Haiku (Anthropic API):**
+- Return: +0.88% | Win Rate: 50% | Sharpe: 1.52 | Cost: ~$0.15
+
+#### Key Findings
+- **Rules-based engine won decisively** with highest returns and risk-adjusted performance
+- **Local LLM achieved 98% of rules-based performance** at zero cost with AI reasoning
+- **Claude underperformed** primarily due to AMZN stop loss (-11%) and conservative positioning
+- Simple deterministic rules outperformed sophisticated AI reasoning in this market regime
+- Local LLM offers best value: near-identical performance to rules-based, $0 cost, 100% private
+
+#### Documentation
+- Updated `README.md` with Claude Haiku backtest section and comparison table
+- Added link to `BACKTEST-COMPARISON.md` in multiple locations
+- Updated backtest results with 3-agent comparison
+- Documented cost estimates for Claude backtesting
+
+#### Configuration
+- Backtest databases: `data/backtest.db`, `data/backtest-local.db`, `data/backtest-claude.db`
+- All three agents use same historical data cache (zero redundant API calls)
+
+### Usage Examples
+
+```bash
+# Claude Haiku backtest
+npm run backtest:claude 2025-09-15 2025-11-24
+
+# Local LLM backtest (requires LM Studio)
+npm run backtest:local 2025-09-15 2025-11-24
+
+# Rules-based backtest (fastest)
+npm run backtest 2025-09-15 2025-11-24
+```
+
+### Recommendations
+
+Based on 2-month backtest results:
+
+1. **Best for most users:** Local LLM
+   - 98% of rules-based performance
+   - Zero cost
+   - 100% private
+   - AI reasoning transparency
+
+2. **Best for speed/simplicity:** Rules-based
+   - Highest returns (6.25%)
+   - Deterministic behavior
+   - Fastest execution
+
+3. **Consider Claude when:**
+   - Need best-in-class reasoning quality
+   - Comparing cloud vs local AI
+   - Research/learning purposes
+
+---
+
 ## [0.2.0] - 2025-11-20
 
 ### Added - LLM Trading Agent

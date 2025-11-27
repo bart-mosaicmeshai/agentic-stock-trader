@@ -301,11 +301,13 @@ npm run backtest -- --help
 - First ~50 days are used for indicator warmup, so effective backtest starts around Sep 15, 2025
 - For longer backtests, upgrade to [Alpha Vantage Premium](https://www.alphavantage.co/premium/) ($49.99/month)
 
-**Recent Results (Sep 16 - Nov 24, 2025):**
+**Recent Results (Sep 15 - Nov 24, 2025):**
 - Total Return: +6.25%
 - Win Rate: 100%
 - Sharpe Ratio: 15.875
 - Max Drawdown: 0%
+
+📊 **See [BACKTEST-COMPARISON.md](./BACKTEST-COMPARISON.md) for comprehensive 3-agent comparison**
 
 Backtest data is stored in `data/backtest.db` separately from live trading data.
 
@@ -360,6 +362,79 @@ npm run backtest:local -- --help
 - Cache expires after 1 day to ensure fresh data
 - Cache stored in `cache/historical/` directory
 - Allows unlimited backtesting without hitting API limits
+
+**Recent Results (Sep 15 - Nov 24, 2025):**
+- Total Return: +6.13%
+- Win Rate: 100%
+- Sharpe Ratio: 11.22
+- Max Drawdown: 0%
+
+#### Claude Haiku Backtest (Cloud AI) ☁️ NEW
+
+Uses Claude Haiku via Anthropic API for intelligent trading decisions with MCP tools.
+
+```bash
+# Backtest with Claude Haiku (2 months = ~5-10 minutes)
+npm run backtest:claude 2025-09-15 2025-11-24
+
+# Custom date range
+npm run backtest:claude 2025-10-01 2025-11-24
+
+# Custom initial capital
+npm run backtest:claude 2025-09-15 2025-11-24 50000
+
+# Show help
+npm run backtest:claude -- --help
+```
+
+**Prerequisites:**
+- ANTHROPIC_API_KEY must be set in .env
+- Internet connection required for API calls
+
+**⚠️ Important:**
+- Same 50-day warmup requirement as other backtests
+- Free Alpha Vantage tier: ~100 days of data (July 7 - Nov 24, 2025)
+- Effective backtest period: Sep 15 - Nov 24, 2025
+
+**Cost Estimates (Claude 3 Haiku):**
+- Per symbol per day: ~$0.0011 (2K input + 500 output tokens)
+- 1 symbol, 2 months (~50 days): ~$0.06
+- 5 symbols, 2 months (typical): ~$0.10-0.15
+- 5 symbols, 2 months (worst case): ~$0.28
+
+**Performance:**
+- Speed: ~5-10 seconds per trading day
+- 2-month backtest (~50 days) = ~5-10 minutes
+- Cost: ~$0.10-0.15 for 2-month period (5 stocks)
+- ☁️ Cloud AI reasoning with Anthropic Claude
+
+**Key Characteristics:**
+- **Cloud-powered** - Uses Anthropic's Claude 3 Haiku model
+- **Advanced reasoning** - High-quality natural language explanations
+- **API-based** - Requires internet and API key
+- **Cost-effective** - Small cost per trade (~$0.001)
+
+**Storage:**
+- Claude backtest results stored in `data/backtest-claude.db`
+- Separate from rule-based and local LLM backtest data
+
+**Recent Results (Sep 15 - Nov 24, 2025):**
+- Total Return: +0.88%
+- Win Rate: 50%
+- Sharpe Ratio: 1.52
+- Max Drawdown: -2.12%
+
+### Backtest Comparison
+
+See **[BACKTEST-COMPARISON.md](./BACKTEST-COMPARISON.md)** for detailed analysis of all three agents:
+
+| Agent | Return | Win Rate | Sharpe | Cost |
+|-------|--------|----------|--------|------|
+| **Rules-Based** | +6.25% | 100% | 15.87 | $0 |
+| **Local LLM** | +6.13% | 100% | 11.22 | $0 |
+| **Claude Haiku** | +0.88% | 50% | 1.52 | ~$0.15 |
+
+**Key Finding:** Rules-based and Local LLM significantly outperformed Claude in this 2-month test, with Local LLM achieving 98% of rules-based performance at zero cost while providing AI reasoning.
 
 ## Agent Comparison: Rule-Based vs LLM
 
